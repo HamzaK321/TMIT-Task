@@ -1,83 +1,3 @@
-// import React, { useState } from 'react';
-// // import firebase from 'firebase/app';
-// // import 'firebase/auth';
-// import { useNavigate } from 'react-router-dom';
-// import '../App.css';
-// import { BrowserRouter, NavLink, Routes } from 'react-router-dom';
-
-
-
-// const LoginForm = () => {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-
-//   const handleEmailChange = (event) => {
-//     setEmail(event.target.value);
-//   };
-
-//   const handlePasswordChange = (event) => {
-//     setPassword(event.target.value);
-//   };
-
-//   const handleSubmit = (event) => {
-//     event.preventDefault();
-//     // Authenticate user with email and password
-//   };
-
-
-//   const Navigate = useNavigate();
-
-
-
-// // // ...
-
-// // firebase.auth().signInWithEmailAndPassword(email, password)
-// //   .then((userCredential) => {
-// //     // Signed in
-// //     const user = userCredential.user;
-// //     // ...
-// //   })
-// //   .catch((error) => {
-// //     const errorCode = error.code;
-// //     const errorMessage = error.message;
-// //     // ...
-// //   });
-
-//   return (
-//     <div className='LoginMasterDiv'>
-//     <div className='parentDiv'>
-    
-//     <form onSubmit={handleSubmit}  className='loginMainDiv'>
-        
-//         <div className='innerLoginDiv'>
-//         <h3 style={{color:'white',   textShadow: '2px 2px 4px #000000'}}>Login Form</h3>
-//       <label>
-//        <span style={{color:'white', fontWeight:'bold',textShadow: '2px 2px 4px #000000'}}>Email</span> 
-//        <br/>
-//         <input className='inputField' type="email" value={email} onChange={handleEmailChange} />
-//       </label>
-//       <label>
-//         <br/>
-//         <span style={{color:'white', fontWeight:'bold' ,textShadow: '2px 2px 4px #000000'}}>Password</span> 
-//        <br/>
-//         <input className='inputField' type="password" value={password} onChange={handlePasswordChange} />
-//       </label>
-//       <br/>
-//       <button type="submit" className='btn'>Login</button>
-//     <p type='submit' onClick={()=>Navigate('/register')} className='btn3' style={{color:'blue', fontWeight:'bold', cursor:'pointer'}} >Not a User? Register here!</p>
-//     </div>
-//     </form>
-    
-    
-//     </div>
-//     </div>
-//   );
-// };
-
-// export default LoginForm;
-
-
-
 
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
@@ -93,16 +13,26 @@ import Grid from '@mui/material/Grid';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useDispatch } from 'react-redux';
+import { setCurrentUser, setError, clearError } from '../Redux/Reducers/authReducers';
 import { useNavigate } from 'react-router-dom';
+// import { useDispatch } from 'react-redux';
+// import { setCurrentUser, setAuthError } from '../Redux/Actions/authActions';
 // import { BrowserRouter, NavLink, Routes } from 'react-router-dom';
 
+import { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
+import { loginSuccess } from "../../src/Redux/Reducers/authReducers";
 
 function Copyright(props) {
-  return (
+  
+
+  return (  
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
       {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
+      <Link color="inherit" href="https://triplemsolution.com/">
+        Triple M IT Solutions
       </Link>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -115,37 +45,71 @@ const theme = createTheme();
 export default function SignInSide() {
     const [emailError, setEmailError] = React.useState(false);
     const [passwordError, setPasswordError] = React.useState(false);
-   
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const email = data.get('email');
-    const password = data.get('password');
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const [values, setValues] = useState({
+        email: "",
+        pass: "",
+      });
+      const [errorMsg, setErrorMsg] = useState("");
+//   const handleSubmit = (event) => {
+//     event.preventDefault();
+//     const data = new FormData(event.currentTarget);
+//     const email = data.get('email');
+//     const password = data.get('password');
+//     console.log({
+//       email: data.get('email'),
+//       password: data.get('password'),
+//     });
 
   
-    if (!email) {
-        setEmailError(true);
-      } else {
-        setEmailError(false);
-      }
-      if (!password) {
-        setPasswordError(true);
-      } else {
-        setPasswordError(false);
-      }
+//     if (!email) {
+//         setEmailError(true);
+//       } else {
+//         setEmailError(false);
+//       }
+//       if (!password) {
+//         setPasswordError(true);
+//       } else {
+//         setPasswordError(false);
+//       }
   
-      // Submit the form if all required fields are filled
-      if (email && password) {
-        console.log({ email, password });
-      }
+//       // Submit the form if all required fields are filled
+//       if (email && password) {
+//         console.log({ email, password });
+//       }
+//   };
+
+const dispatch = useDispatch();
+const handleSubmission = async () => {
+    if (!values.email || !values.pass) {
+      setErrorMsg("Fill all fields");
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.pass
+      );
+      // Signed in 
+      const user = userCredential.user;
+
+    //   const accessToken = await userCredential.user.getIdToken();
+const accessToken = await userCredential.user.getIdToken();
+const userEmail = userCredential.user.email;
+dispatch(loginSuccess({accessToken: accessToken, userEmail: userEmail}));
+
+      console.log(user);
+      Navigate("/payment");
+
+
+    } catch (error) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      setErrorMsg(errorMessage);
+    }
   };
-
-
   
 
   const Navigate = useNavigate();
@@ -185,7 +149,10 @@ export default function SignInSide() {
             <Typography component="h1" variant="h5">
               Sign in
             </Typography>
-            <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
+            <Box component="form" noValidate onSubmit={(e) => {
+    e.preventDefault();
+    handleSubmission();
+}}>
               <TextField
                 margin="normal"
                 required
@@ -195,8 +162,11 @@ export default function SignInSide() {
                 name="email"
                 autoComplete="email"
                 autoFocus
-                error={emailError}
-                helperText={emailError && 'Please enter your email'}
+                // error={emailError}
+                // helperText={emailError && 'Please enter your email'}
+                onChange={(event) =>
+                    setValues((prev) => ({ ...prev, email: event.target.value }))
+                  }
               />
               <TextField
                 margin="normal"
@@ -209,6 +179,9 @@ export default function SignInSide() {
                 autoComplete="current-password"
                 error={passwordError}
                   helperText={passwordError && 'Please enter your email'}
+                  onChange={(event) =>
+                    setValues((prev) => ({ ...prev, pass: event.target.value }))
+                  }
               />
               <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}

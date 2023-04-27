@@ -1,41 +1,54 @@
-
 import './App.css';
 import LoginForm from './Components/Login';
 import RegistrationForm from './Components/Register';
 import PaymentForm from './Components/PaymentForm';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import UserProfile from './Components/PaymentHistory';
-import firebase from './Database/FireBase';
-
+import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
+import PaymentDetails from './Components/PaymentHistory';
+import { logout } from './Redux/Reducers/authReducers';
+import { useDispatch, useSelector  } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
+  const dispatch = useDispatch();
+  // const navigate = useNavigate();
 
-  // const ref= firebase.firestore().collection("User-Payment")
-  // console.log("I am here", ref);
+  const isLogged = useSelector(state => state.auth.isLoggedIn);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    
+  }
+
   return (
     <BrowserRouter>
-    <div className="App">
-    <div className="header">
-  <a href="https://triplemsolution.com/" className="logo" style={{color:'white'}}>Triple M Solutions </a>
-  <div className="header-right">
-    <a className="active" href="/">Login</a>
-    <a href="/register">Register</a>
-    <a href="/payment">Pay</a>
-    <a href="/UserData">User Info</a>
-  </div>
-</div>
-
-      <Routes>  
-      <Route path='/' Component={LoginForm}/>
-      {/* <LoginForm/> */}
-      <Route path='/register' Component={RegistrationForm}/>
-      {/* <RegistrationForm/> */}
-      <Route path='/payment' Component={PaymentForm}/>
-      {/* <PaymentForm/> */}
-      <Route path='/UserData' Component={UserProfile}/>
-      </Routes>
-
-    </div>
+      <div className="App">
+        <div className="header">
+          <Link to="/" className="logo" style={{ color: 'white' }}>Triple M Solutions</Link>
+          <div className="header-right">
+            {isLogged ? (
+              <>
+                <Link to="/payment">Pay</Link>
+                <Link to="/UserData">User Info</Link>
+                <Link to='/' className='btn btn-dark'  onClick={handleLogout}>Logout</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/" className="active">Login</Link>
+                <Link to="/register">Register</Link>
+              </>
+            )}
+            {/* <form action="/create-checkout-session" method="POST">
+              <button type="submit">Checkout</button>
+            </form> */}
+          </div>
+        </div>
+        <Routes>
+          <Route path='/' element={<LoginForm />} />
+          <Route path='/register' element={<RegistrationForm />} />
+          <Route path='/payment' element={<PaymentForm />} />
+          <Route path='/UserData' element={<PaymentDetails />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
